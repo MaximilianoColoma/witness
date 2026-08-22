@@ -1,0 +1,2195 @@
+{
+  "wire_contract_version": "1.1.0-draft.3",
+  "product": "Witness",
+  "technical_identifier": "log-mcp",
+  "encoding": "JSON through MCP text result",
+  "compatibility_baseline": "Legacy function names/signatures; additive optional request_id and new tool_log_record are explicit draft additions",
+  "tools": {
+    "tool_register_project": {
+      "request": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "domains": {
+            "type": "string",
+            "maxLength": 2000,
+            "encoding": "csv_or_json_array_v1"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "caller_instance_id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "request_id": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9._:-]+$",
+            "normalization": "none; exact ASCII bytes are the idempotency identity"
+          },
+          "identity_envelope": {
+            "$ref": "#/definitions/identity_envelope"
+          }
+        },
+        "required": [
+          "name",
+          "domains",
+          "caller_instance_id",
+          "request_id",
+          "identity_envelope"
+        ]
+      },
+      "response": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "error"
+            ]
+          },
+          "correlation_id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "AUTHENTICATION_REQUIRED",
+              "CONFLICT",
+              "IDENTITY_MISMATCH",
+              "INTERNAL_ERROR",
+              "INVALID_INPUT",
+              "OK",
+              "PERMISSION_DENIED",
+              "REPLAY_DETECTED",
+              "REVOKED_IDENTITY",
+              "PROFILE_BINDING_MISMATCH",
+              "TENANT_MISMATCH",
+              "REQUEST_BINDING_MISMATCH"
+            ]
+          },
+          "project": {
+            "$ref": "#/definitions/project"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "status",
+          "correlation_id"
+        ],
+        "variants": {
+          "success": {
+            "required": [
+              "status",
+              "correlation_id",
+              "project"
+            ],
+            "status_const": "ok",
+            "code_policy": "absent_or_OK",
+            "message_policy": "optional_non_sensitive"
+          },
+          "error": {
+            "required": [
+              "status",
+              "correlation_id",
+              "code",
+              "message"
+            ],
+            "status_const": "error",
+            "success_fields_policy": "absent"
+          }
+        }
+      },
+      "errors": [
+        "AUTHENTICATION_REQUIRED",
+        "IDENTITY_MISMATCH",
+        "PERMISSION_DENIED",
+        "INVALID_INPUT",
+        "INTERNAL_ERROR",
+        "CONFLICT",
+        "REPLAY_DETECTED",
+        "REVOKED_IDENTITY",
+        "PROFILE_BINDING_MISMATCH",
+        "TENANT_MISMATCH",
+        "REQUEST_BINDING_MISMATCH"
+      ],
+      "bounds": {
+        "name_max": 128,
+        "domains_max_items": 50,
+        "idempotency": "request_id required for retry safety",
+        "upsert": "name is immutable identity; existing project may atomically replace domains/description only when request_id is new; same request_id obeys idempotency contract"
+      }
+    },
+    "tool_log_decision": {
+      "request": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "project": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "decision": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "caller_instance_id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "domain": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "scope": {
+            "type": "string",
+            "default": "macro",
+            "maxLength": 64
+          },
+          "alternatives": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "rationale": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "severity": {
+            "type": "string",
+            "default": "standard",
+            "maxLength": 32
+          },
+          "pinned": {
+            "type": "boolean",
+            "default": false
+          },
+          "based_on": {
+            "type": "string",
+            "maxLength": 4000,
+            "encoding": "csv_or_json_array_v1"
+          },
+          "decision_ids": {
+            "type": "string",
+            "maxLength": 4000,
+            "encoding": "csv_or_json_array_v1"
+          },
+          "tags": {
+            "type": "string",
+            "maxLength": 2000,
+            "encoding": "csv_or_json_array_v1"
+          },
+          "task_id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "impact_level": {
+            "type": "string",
+            "default": "routine",
+            "maxLength": 32
+          },
+          "request_id": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9._:-]+$",
+            "normalization": "none; exact ASCII bytes are the idempotency identity"
+          },
+          "identity_envelope": {
+            "$ref": "#/definitions/identity_envelope"
+          }
+        },
+        "required": [
+          "project",
+          "title",
+          "decision",
+          "caller_instance_id",
+          "request_id",
+          "identity_envelope"
+        ]
+      },
+      "response": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "error"
+            ]
+          },
+          "correlation_id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "AUTHENTICATION_REQUIRED",
+              "CONFLICT",
+              "IDENTITY_MISMATCH",
+              "INTERNAL_ERROR",
+              "INVALID_INPUT",
+              "NOT_FOUND",
+              "OK",
+              "PERMISSION_DENIED",
+              "REPLAY_DETECTED",
+              "REVOKED_IDENTITY",
+              "PROFILE_BINDING_MISMATCH",
+              "TENANT_MISMATCH",
+              "REQUEST_BINDING_MISMATCH"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "type": {
+            "const": "decision"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "entry": {
+            "$ref": "#/definitions/decision"
+          }
+        },
+        "required": [
+          "status",
+          "correlation_id"
+        ],
+        "variants": {
+          "success": {
+            "required": [
+              "status",
+              "correlation_id",
+              "id",
+              "type"
+            ],
+            "status_const": "ok",
+            "code_policy": "absent_or_OK",
+            "message_policy": "optional_non_sensitive"
+          },
+          "error": {
+            "required": [
+              "status",
+              "correlation_id",
+              "code",
+              "message"
+            ],
+            "status_const": "error",
+            "success_fields_policy": "absent"
+          }
+        }
+      },
+      "errors": [
+        "AUTHENTICATION_REQUIRED",
+        "IDENTITY_MISMATCH",
+        "PERMISSION_DENIED",
+        "INVALID_INPUT",
+        "INTERNAL_ERROR",
+        "NOT_FOUND",
+        "CONFLICT",
+        "REPLAY_DETECTED",
+        "REVOKED_IDENTITY",
+        "PROFILE_BINDING_MISMATCH",
+        "TENANT_MISMATCH",
+        "REQUEST_BINDING_MISMATCH"
+      ],
+      "bounds": {
+        "free_text_max": 4000,
+        "based_on_max_items": 100,
+        "idempotency": "request_id required for retry safety"
+      }
+    },
+    "tool_log_insight": {
+      "request": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "insight": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "caller_instance_id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "project": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "applies_to": {
+            "type": "string",
+            "default": "project",
+            "maxLength": 32
+          },
+          "applies_projects": {
+            "type": "string",
+            "maxLength": 2000,
+            "encoding": "csv_or_json_array_v1"
+          },
+          "applies_domains": {
+            "type": "string",
+            "maxLength": 2000,
+            "encoding": "csv_or_json_array_v1"
+          },
+          "actionable_in": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "based_on": {
+            "type": "string",
+            "maxLength": 4000,
+            "encoding": "csv_or_json_array_v1"
+          },
+          "tags": {
+            "type": "string",
+            "maxLength": 2000,
+            "encoding": "csv_or_json_array_v1"
+          },
+          "mcp_scope": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "applies_to_mcps": {
+            "type": "string",
+            "maxLength": 2000,
+            "encoding": "csv_or_json_array_v1"
+          },
+          "impact_level": {
+            "type": "string",
+            "default": "routine",
+            "maxLength": 32
+          },
+          "request_id": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9._:-]+$",
+            "normalization": "none; exact ASCII bytes are the idempotency identity"
+          },
+          "identity_envelope": {
+            "$ref": "#/definitions/identity_envelope"
+          }
+        },
+        "required": [
+          "title",
+          "insight",
+          "caller_instance_id",
+          "project",
+          "request_id",
+          "identity_envelope"
+        ]
+      },
+      "response": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "error"
+            ]
+          },
+          "correlation_id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "AUTHENTICATION_REQUIRED",
+              "CONFLICT",
+              "IDENTITY_MISMATCH",
+              "INTERNAL_ERROR",
+              "INVALID_INPUT",
+              "NOT_FOUND",
+              "OK",
+              "PERMISSION_DENIED",
+              "REPLAY_DETECTED",
+              "REVOKED_IDENTITY",
+              "PROFILE_BINDING_MISMATCH",
+              "TENANT_MISMATCH",
+              "REQUEST_BINDING_MISMATCH"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "type": {
+            "const": "insight"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "entry": {
+            "$ref": "#/definitions/insight"
+          }
+        },
+        "required": [
+          "status",
+          "correlation_id"
+        ],
+        "variants": {
+          "success": {
+            "required": [
+              "status",
+              "correlation_id",
+              "id",
+              "type"
+            ],
+            "status_const": "ok",
+            "code_policy": "absent_or_OK",
+            "message_policy": "optional_non_sensitive"
+          },
+          "error": {
+            "required": [
+              "status",
+              "correlation_id",
+              "code",
+              "message"
+            ],
+            "status_const": "error",
+            "success_fields_policy": "absent"
+          }
+        }
+      },
+      "errors": [
+        "AUTHENTICATION_REQUIRED",
+        "IDENTITY_MISMATCH",
+        "PERMISSION_DENIED",
+        "INVALID_INPUT",
+        "INTERNAL_ERROR",
+        "NOT_FOUND",
+        "CONFLICT",
+        "REPLAY_DETECTED",
+        "REVOKED_IDENTITY",
+        "PROFILE_BINDING_MISMATCH",
+        "TENANT_MISMATCH",
+        "REQUEST_BINDING_MISMATCH"
+      ],
+      "bounds": {
+        "free_text_max": 4000,
+        "list_fields_max_items": 100,
+        "idempotency": "request_id required for retry safety"
+      }
+    },
+    "tool_log_outcome": {
+      "request": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "project": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "task_summary": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "result": {
+            "type": "string",
+            "enum": [
+              "success",
+              "partial",
+              "fail"
+            ]
+          },
+          "caller_instance_id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "domain": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "skills_used": {
+            "type": "string",
+            "maxLength": 2000,
+            "encoding": "csv_or_json_array_v1"
+          },
+          "tools_used": {
+            "type": "string",
+            "maxLength": 2000,
+            "encoding": "csv_or_json_array_v1"
+          },
+          "workflow_chain": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "duration_planned": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 31536000
+          },
+          "duration_actual": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 31536000
+          },
+          "root_cause": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "root_cause_category": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "prevented_by": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "decision_ids": {
+            "type": "string",
+            "maxLength": 4000,
+            "encoding": "csv_or_json_array_v1"
+          },
+          "based_on": {
+            "type": "string",
+            "maxLength": 4000,
+            "encoding": "csv_or_json_array_v1"
+          },
+          "quality_score": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 10
+          },
+          "execution_quality": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 10
+          },
+          "decision_quality": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 10
+          },
+          "compliant_with_decisions": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "tokens_input": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "tokens_output": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "tokens_total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "tags": {
+            "type": "string",
+            "maxLength": 2000,
+            "encoding": "csv_or_json_array_v1"
+          },
+          "session_id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "task_id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "impact_level": {
+            "type": "string",
+            "default": "routine",
+            "maxLength": 32
+          },
+          "request_id": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9._:-]+$",
+            "normalization": "none; exact ASCII bytes are the idempotency identity"
+          },
+          "identity_envelope": {
+            "$ref": "#/definitions/identity_envelope"
+          }
+        },
+        "required": [
+          "project",
+          "task_summary",
+          "result",
+          "caller_instance_id",
+          "request_id",
+          "identity_envelope"
+        ]
+      },
+      "response": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "error"
+            ]
+          },
+          "correlation_id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "AUTHENTICATION_REQUIRED",
+              "CONFLICT",
+              "IDENTITY_MISMATCH",
+              "INTERNAL_ERROR",
+              "INVALID_INPUT",
+              "NOT_FOUND",
+              "OK",
+              "PERMISSION_DENIED",
+              "REPLAY_DETECTED",
+              "REVOKED_IDENTITY",
+              "PROFILE_BINDING_MISMATCH",
+              "TENANT_MISMATCH",
+              "REQUEST_BINDING_MISMATCH"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "type": {
+            "const": "outcome"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "entry": {
+            "$ref": "#/definitions/outcome"
+          }
+        },
+        "required": [
+          "status",
+          "correlation_id"
+        ],
+        "variants": {
+          "success": {
+            "required": [
+              "status",
+              "correlation_id",
+              "id",
+              "type"
+            ],
+            "status_const": "ok",
+            "code_policy": "absent_or_OK",
+            "message_policy": "optional_non_sensitive"
+          },
+          "error": {
+            "required": [
+              "status",
+              "correlation_id",
+              "code",
+              "message"
+            ],
+            "status_const": "error",
+            "success_fields_policy": "absent"
+          }
+        }
+      },
+      "errors": [
+        "AUTHENTICATION_REQUIRED",
+        "IDENTITY_MISMATCH",
+        "PERMISSION_DENIED",
+        "INVALID_INPUT",
+        "INTERNAL_ERROR",
+        "NOT_FOUND",
+        "CONFLICT",
+        "REPLAY_DETECTED",
+        "REVOKED_IDENTITY",
+        "PROFILE_BINDING_MISMATCH",
+        "TENANT_MISMATCH",
+        "REQUEST_BINDING_MISMATCH"
+      ],
+      "bounds": {
+        "free_text_max": 4000,
+        "quality_range": "-1 or 0..10",
+        "idempotency": "request_id required for retry safety"
+      }
+    },
+    "tool_log_record": {
+      "request": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "project": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "record_type": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "caller_instance_id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "status": {
+            "type": "string",
+            "default": "active",
+            "enum": [
+              "active"
+            ]
+          },
+          "based_on": {
+            "type": "string",
+            "maxLength": 4000,
+            "encoding": "csv_or_json_array_v1"
+          },
+          "tags": {
+            "type": "string",
+            "maxLength": 2000,
+            "encoding": "csv_or_json_array_v1"
+          },
+          "request_id": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9._:-]+$",
+            "normalization": "none; exact ASCII bytes are the idempotency identity"
+          },
+          "references": {
+            "type": "string",
+            "default": "",
+            "maxLength": 8000,
+            "encoding": "csv_or_json_array_v1"
+          },
+          "identity_envelope": {
+            "$ref": "#/definitions/identity_envelope"
+          }
+        },
+        "required": [
+          "project",
+          "record_type",
+          "title",
+          "content",
+          "caller_instance_id",
+          "request_id",
+          "identity_envelope"
+        ]
+      },
+      "response": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "error"
+            ]
+          },
+          "correlation_id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "AUTHENTICATION_REQUIRED",
+              "CONFLICT",
+              "IDENTITY_MISMATCH",
+              "INTERNAL_ERROR",
+              "INVALID_INPUT",
+              "NOT_FOUND",
+              "OK",
+              "PERMISSION_DENIED",
+              "REPLAY_DETECTED",
+              "REVOKED_IDENTITY",
+              "PROFILE_BINDING_MISMATCH",
+              "TENANT_MISMATCH",
+              "REQUEST_BINDING_MISMATCH"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "type": {
+            "const": "record"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "entry": {
+            "$ref": "#/definitions/record"
+          }
+        },
+        "required": [
+          "status",
+          "correlation_id"
+        ],
+        "variants": {
+          "success": {
+            "required": [
+              "status",
+              "correlation_id",
+              "id",
+              "type"
+            ],
+            "status_const": "ok",
+            "code_policy": "absent_or_OK",
+            "message_policy": "optional_non_sensitive"
+          },
+          "error": {
+            "required": [
+              "status",
+              "correlation_id",
+              "code",
+              "message"
+            ],
+            "status_const": "error",
+            "success_fields_policy": "absent"
+          }
+        }
+      },
+      "errors": [
+        "AUTHENTICATION_REQUIRED",
+        "IDENTITY_MISMATCH",
+        "PERMISSION_DENIED",
+        "INVALID_INPUT",
+        "INTERNAL_ERROR",
+        "NOT_FOUND",
+        "CONFLICT",
+        "REPLAY_DETECTED",
+        "REVOKED_IDENTITY",
+        "PROFILE_BINDING_MISMATCH",
+        "TENANT_MISMATCH",
+        "REQUEST_BINDING_MISMATCH"
+      ],
+      "bounds": {
+        "free_text_max": 4000,
+        "based_on_max_items": 100,
+        "idempotency": "request_id required for retry safety",
+        "references": {
+          "maxItems": 100
+        }
+      }
+    },
+    "tool_update_status": {
+      "request": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "entry_id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "new_status": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "caller_instance_id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "request_id": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9._:-]+$",
+            "normalization": "none; exact ASCII bytes are the idempotency identity"
+          },
+          "identity_envelope": {
+            "$ref": "#/definitions/identity_envelope"
+          }
+        },
+        "required": [
+          "entry_id",
+          "new_status",
+          "caller_instance_id",
+          "request_id",
+          "identity_envelope"
+        ]
+      },
+      "response": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "error"
+            ]
+          },
+          "correlation_id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "AUTHENTICATION_REQUIRED",
+              "CONFLICT",
+              "IDENTITY_MISMATCH",
+              "INTERNAL_ERROR",
+              "INVALID_INPUT",
+              "NOT_FOUND",
+              "OK",
+              "PERMISSION_DENIED",
+              "REPLAY_DETECTED",
+              "REVOKED_IDENTITY",
+              "PROFILE_BINDING_MISMATCH",
+              "TENANT_MISMATCH",
+              "REQUEST_BINDING_MISMATCH"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "type": {
+            "enum": [
+              "decision",
+              "insight",
+              "outcome",
+              "record"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "new_status": {
+            "type": "string",
+            "enum": [
+              "proposed",
+              "locked",
+              "superseded",
+              "archived",
+              "hypothesis",
+              "validated",
+              "invalidated",
+              "recorded",
+              "verified",
+              "disputed",
+              "active"
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "correlation_id"
+        ],
+        "variants": {
+          "success": {
+            "required": [
+              "status",
+              "correlation_id",
+              "id",
+              "type",
+              "new_status"
+            ],
+            "status_const": "ok",
+            "code_policy": "absent_or_OK",
+            "message_policy": "optional_non_sensitive"
+          },
+          "error": {
+            "required": [
+              "status",
+              "correlation_id",
+              "code",
+              "message"
+            ],
+            "status_const": "error",
+            "success_fields_policy": "absent"
+          }
+        }
+      },
+      "errors": [
+        "AUTHENTICATION_REQUIRED",
+        "IDENTITY_MISMATCH",
+        "PERMISSION_DENIED",
+        "INVALID_INPUT",
+        "INTERNAL_ERROR",
+        "NOT_FOUND",
+        "CONFLICT",
+        "REPLAY_DETECTED",
+        "REVOKED_IDENTITY",
+        "PROFILE_BINDING_MISMATCH",
+        "TENANT_MISMATCH",
+        "REQUEST_BINDING_MISMATCH"
+      ],
+      "bounds": {
+        "reason_max": 4000,
+        "idempotency": "request_id required for retry safety"
+      }
+    },
+    "tool_get_entry": {
+      "request": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "entry_id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "identity_envelope": {
+            "$ref": "#/definitions/identity_envelope"
+          }
+        },
+        "required": [
+          "entry_id",
+          "identity_envelope"
+        ]
+      },
+      "response": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "error"
+            ]
+          },
+          "correlation_id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "AUTHENTICATION_REQUIRED",
+              "INTERNAL_ERROR",
+              "INVALID_INPUT",
+              "NOT_FOUND",
+              "OK",
+              "PERMISSION_DENIED",
+              "REPLAY_DETECTED",
+              "REVOKED_IDENTITY",
+              "PROFILE_BINDING_MISMATCH",
+              "TENANT_MISMATCH",
+              "REQUEST_BINDING_MISMATCH"
+            ]
+          },
+          "entry": {
+            "$ref": "#/definitions/entry"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "status",
+          "correlation_id"
+        ],
+        "variants": {
+          "success": {
+            "required": [
+              "status",
+              "correlation_id",
+              "entry"
+            ],
+            "status_const": "ok",
+            "code_policy": "absent_or_OK",
+            "message_policy": "optional_non_sensitive"
+          },
+          "error": {
+            "required": [
+              "status",
+              "correlation_id",
+              "code",
+              "message"
+            ],
+            "status_const": "error",
+            "success_fields_policy": "absent"
+          }
+        }
+      },
+      "errors": [
+        "AUTHENTICATION_REQUIRED",
+        "PERMISSION_DENIED",
+        "INVALID_INPUT",
+        "INTERNAL_ERROR",
+        "NOT_FOUND",
+        "REPLAY_DETECTED",
+        "REVOKED_IDENTITY",
+        "PROFILE_BINDING_MISMATCH",
+        "TENANT_MISMATCH",
+        "REQUEST_BINDING_MISMATCH"
+      ],
+      "bounds": {
+        "one_object": true
+      }
+    },
+    "tool_get_context_for": {
+      "request": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "project": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "domain": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "scope": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "max_items": {
+            "type": "integer",
+            "default": 20,
+            "minimum": 1,
+            "maximum": 100
+          },
+          "identity_envelope": {
+            "$ref": "#/definitions/identity_envelope"
+          }
+        },
+        "required": [
+          "project",
+          "identity_envelope"
+        ]
+      },
+      "response": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "error"
+            ]
+          },
+          "correlation_id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "AUTHENTICATION_REQUIRED",
+              "INTERNAL_ERROR",
+              "INVALID_INPUT",
+              "NOT_FOUND",
+              "OK",
+              "PERMISSION_DENIED",
+              "REPLAY_DETECTED",
+              "REVOKED_IDENTITY",
+              "PROFILE_BINDING_MISMATCH",
+              "TENANT_MISMATCH",
+              "REQUEST_BINDING_MISMATCH"
+            ]
+          },
+          "decisions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/entry"
+            }
+          },
+          "insights": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/entry"
+            }
+          },
+          "outcomes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/entry"
+            }
+          },
+          "records": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/entry"
+            }
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "status",
+          "correlation_id"
+        ],
+        "variants": {
+          "success": {
+            "required": [
+              "status",
+              "correlation_id",
+              "decisions",
+              "insights",
+              "outcomes",
+              "records"
+            ],
+            "status_const": "ok",
+            "code_policy": "absent_or_OK",
+            "message_policy": "optional_non_sensitive"
+          },
+          "error": {
+            "required": [
+              "status",
+              "correlation_id",
+              "code",
+              "message"
+            ],
+            "status_const": "error",
+            "success_fields_policy": "absent"
+          }
+        }
+      },
+      "errors": [
+        "AUTHENTICATION_REQUIRED",
+        "PERMISSION_DENIED",
+        "INVALID_INPUT",
+        "INTERNAL_ERROR",
+        "NOT_FOUND",
+        "REPLAY_DETECTED",
+        "REVOKED_IDENTITY",
+        "PROFILE_BINDING_MISMATCH",
+        "TENANT_MISMATCH",
+        "REQUEST_BINDING_MISMATCH"
+      ],
+      "bounds": {
+        "max_items": 100,
+        "per_type_limit": true
+      }
+    },
+    "tool_query_log": {
+      "request": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "project": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "domain": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "status": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "confidence": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "result": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "search": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "period": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "tags": {
+            "type": "string",
+            "maxLength": 1000,
+            "encoding": "csv_or_json_array_v1"
+          },
+          "limit": {
+            "type": "integer",
+            "default": 20,
+            "minimum": 1,
+            "maximum": 100
+          },
+          "offset": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "identity_envelope": {
+            "$ref": "#/definitions/identity_envelope"
+          }
+        },
+        "required": [
+          "identity_envelope"
+        ]
+      },
+      "response": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "error"
+            ]
+          },
+          "correlation_id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "AUTHENTICATION_REQUIRED",
+              "INTERNAL_ERROR",
+              "INVALID_INPUT",
+              "OK",
+              "PERMISSION_DENIED",
+              "REPLAY_DETECTED",
+              "REVOKED_IDENTITY",
+              "PROFILE_BINDING_MISMATCH",
+              "TENANT_MISMATCH",
+              "REQUEST_BINDING_MISMATCH"
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/entry"
+            }
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "next_offset": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "status",
+          "correlation_id"
+        ],
+        "variants": {
+          "success": {
+            "required": [
+              "status",
+              "correlation_id",
+              "items",
+              "limit",
+              "offset",
+              "next_offset"
+            ],
+            "status_const": "ok",
+            "code_policy": "absent_or_OK",
+            "message_policy": "optional_non_sensitive"
+          },
+          "error": {
+            "required": [
+              "status",
+              "correlation_id",
+              "code",
+              "message"
+            ],
+            "status_const": "error",
+            "success_fields_policy": "absent"
+          }
+        }
+      },
+      "errors": [
+        "AUTHENTICATION_REQUIRED",
+        "PERMISSION_DENIED",
+        "INVALID_INPUT",
+        "INTERNAL_ERROR",
+        "REPLAY_DETECTED",
+        "REVOKED_IDENTITY",
+        "PROFILE_BINDING_MISMATCH",
+        "TENANT_MISMATCH",
+        "REQUEST_BINDING_MISMATCH"
+      ],
+      "bounds": {
+        "limit_max": 100,
+        "offset_max": 100000,
+        "search_max": 500
+      }
+    },
+    "tool_query_log_fts5": {
+      "request": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "query": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "project": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "max_items": {
+            "type": "integer",
+            "default": 3,
+            "minimum": 1,
+            "maximum": 50
+          },
+          "include_types": {
+            "type": "string",
+            "maxLength": 500,
+            "encoding": "csv_or_json_array_v1"
+          },
+          "global_cap": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 200
+          },
+          "caller_instance_id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "identity_envelope": {
+            "$ref": "#/definitions/identity_envelope"
+          }
+        },
+        "required": [
+          "query",
+          "caller_instance_id",
+          "identity_envelope"
+        ]
+      },
+      "response": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "error"
+            ]
+          },
+          "correlation_id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "AUTHENTICATION_REQUIRED",
+              "IDENTITY_MISMATCH",
+              "INTERNAL_ERROR",
+              "INVALID_INPUT",
+              "OK",
+              "PERMISSION_DENIED",
+              "REPLAY_DETECTED",
+              "REVOKED_IDENTITY",
+              "PROFILE_BINDING_MISMATCH",
+              "TENANT_MISMATCH",
+              "REQUEST_BINDING_MISMATCH"
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/entry"
+            }
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "status",
+          "correlation_id"
+        ],
+        "variants": {
+          "success": {
+            "required": [
+              "status",
+              "correlation_id",
+              "items"
+            ],
+            "status_const": "ok",
+            "code_policy": "absent_or_OK",
+            "message_policy": "optional_non_sensitive"
+          },
+          "error": {
+            "required": [
+              "status",
+              "correlation_id",
+              "code",
+              "message"
+            ],
+            "status_const": "error",
+            "success_fields_policy": "absent"
+          }
+        }
+      },
+      "errors": [
+        "AUTHENTICATION_REQUIRED",
+        "IDENTITY_MISMATCH",
+        "PERMISSION_DENIED",
+        "INVALID_INPUT",
+        "INTERNAL_ERROR",
+        "REPLAY_DETECTED",
+        "REVOKED_IDENTITY",
+        "PROFILE_BINDING_MISMATCH",
+        "TENANT_MISMATCH",
+        "REQUEST_BINDING_MISMATCH"
+      ],
+      "bounds": {
+        "query_max": 500,
+        "max_items": 50,
+        "global_cap": 200,
+        "snippet": "redacted content only"
+      }
+    }
+  },
+  "encodings": {
+    "csv_or_json_array_v1": "String is either a JSON array of strings or comma-separated UTF-8 tokens; trim whitespace, reject empty tokens/duplicates after normalization; item bounds apply after decoding.",
+    "json_object_string_v1": "String must decode to one JSON object; duplicate keys, trailing data and non-object roots are INVALID_INPUT.",
+    "json_array_of_objects_string_v1": "String must decode to one JSON array of objects; duplicate object IDs, trailing data and non-array roots are INVALID_INPUT."
+  },
+  "definitions": {
+    "entry": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/decision"
+        },
+        {
+          "$ref": "#/definitions/insight"
+        },
+        {
+          "$ref": "#/definitions/outcome"
+        },
+        {
+          "$ref": "#/definitions/record"
+        }
+      ]
+    },
+    "project": {
+      "type": "object",
+      "required": [
+        "name",
+        "domains",
+        "description"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "domains": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "project",
+        "status",
+        "title",
+        "decision",
+        "domain",
+        "alternatives",
+        "rationale",
+        "based_on",
+        "created_at",
+        "actor_subject_id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "project": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "actor_subject_id": {
+          "type": "string"
+        },
+        "type": {
+          "const": "decision"
+        },
+        "status": {
+          "enum": [
+            "proposed",
+            "locked",
+            "superseded",
+            "archived"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "decision": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "alternatives": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "based_on": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "insight": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "project",
+        "status",
+        "title",
+        "insight",
+        "confidence",
+        "created_at",
+        "actor_subject_id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "project": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "actor_subject_id": {
+          "type": "string"
+        },
+        "type": {
+          "const": "insight"
+        },
+        "status": {
+          "enum": [
+            "hypothesis",
+            "validated",
+            "invalidated",
+            "archived"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "insight": {
+          "type": "string"
+        },
+        "confidence": {
+          "type": "number"
+        },
+        "actionable_in": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "project",
+        "status",
+        "task_summary",
+        "result",
+        "created_at",
+        "actor_subject_id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "project": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "actor_subject_id": {
+          "type": "string"
+        },
+        "type": {
+          "const": "outcome"
+        },
+        "status": {
+          "enum": [
+            "recorded",
+            "verified",
+            "disputed",
+            "archived"
+          ]
+        },
+        "task_summary": {
+          "type": "string"
+        },
+        "result": {
+          "enum": [
+            "success",
+            "partial",
+            "fail"
+          ]
+        },
+        "root_cause": {
+          "type": "string"
+        },
+        "prevented_by": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "project",
+        "status",
+        "record_type",
+        "title",
+        "content",
+        "created_at",
+        "actor_subject_id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "project": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "actor_subject_id": {
+          "type": "string"
+        },
+        "type": {
+          "const": "record"
+        },
+        "status": {
+          "enum": [
+            "active",
+            "archived"
+          ]
+        },
+        "record_type": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "identity_envelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "type": "string",
+          "const": "1.0"
+        },
+        "principal_pubkey": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "owner_pubkey": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "owner_attestation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "conditions": {
+              "type": "string",
+              "maxLength": 2000
+            },
+            "signature": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{128}$"
+            }
+          },
+          "required": [
+            "conditions",
+            "signature"
+          ]
+        },
+        "profile_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9._:-]+$"
+        },
+        "profile_version_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "tenant_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9._:-]+$"
+        },
+        "runtime_generation": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "tool_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "payload_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "nonce": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "issued_at": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 253402300799
+        },
+        "expires_at": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 253402300799
+        },
+        "signature": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{128}$"
+        }
+      },
+      "required": [
+        "version",
+        "principal_pubkey",
+        "owner_pubkey",
+        "owner_attestation",
+        "profile_id",
+        "profile_version_sha256",
+        "tenant_id",
+        "runtime_generation",
+        "tool_name",
+        "payload_sha256",
+        "nonce",
+        "issued_at",
+        "expires_at",
+        "signature"
+      ],
+      "constraints": [
+        "expires_at > issued_at",
+        "tenant_id equals server-resolved tenant",
+        "tool_name equals dispatch target",
+        "payload_sha256 binds exact raw request without identity_envelope",
+        "principal_pubkey verifies signature",
+        "owner_pubkey verifies owner_attestation",
+        "profile hash resolves current authorized bytes",
+        "nonce atomically first-use in shared tenant store"
+      ]
+    }
+  },
+  "identity_negative_matrix": [
+    {
+      "id": "NEG-VERSION",
+      "field": "version",
+      "mutation": "delete required field",
+      "invalid_fixture": {
+        "operation": "delete",
+        "path": "identity_envelope.version"
+      },
+      "expected_status": "error",
+      "expected_code": "INVALID_INPUT",
+      "must_reject": true,
+      "must_not_dispatch": true
+    },
+    {
+      "id": "NEG-PRINCIPAL-PUBKEY",
+      "field": "principal_pubkey",
+      "mutation": "delete required field",
+      "invalid_fixture": {
+        "operation": "delete",
+        "path": "identity_envelope.principal_pubkey"
+      },
+      "expected_status": "error",
+      "expected_code": "AUTHENTICATION_REQUIRED",
+      "must_reject": true,
+      "must_not_dispatch": true
+    },
+    {
+      "id": "NEG-OWNER-PUBKEY",
+      "field": "owner_pubkey",
+      "mutation": "delete required field",
+      "invalid_fixture": {
+        "operation": "delete",
+        "path": "identity_envelope.owner_pubkey"
+      },
+      "expected_status": "error",
+      "expected_code": "AUTHENTICATION_REQUIRED",
+      "must_reject": true,
+      "must_not_dispatch": true
+    },
+    {
+      "id": "NEG-OWNER-ATTESTATION",
+      "field": "owner_attestation",
+      "mutation": "delete required field",
+      "invalid_fixture": {
+        "operation": "delete",
+        "path": "identity_envelope.owner_attestation"
+      },
+      "expected_status": "error",
+      "expected_code": "AUTHENTICATION_REQUIRED",
+      "must_reject": true,
+      "must_not_dispatch": true
+    },
+    {
+      "id": "NEG-PROFILE-ID",
+      "field": "profile_id",
+      "mutation": "delete required field",
+      "invalid_fixture": {
+        "operation": "delete",
+        "path": "identity_envelope.profile_id"
+      },
+      "expected_status": "error",
+      "expected_code": "PROFILE_BINDING_MISMATCH",
+      "must_reject": true,
+      "must_not_dispatch": true
+    },
+    {
+      "id": "NEG-PROFILE-VERSION-SHA256",
+      "field": "profile_version_sha256",
+      "mutation": "delete required field",
+      "invalid_fixture": {
+        "operation": "delete",
+        "path": "identity_envelope.profile_version_sha256"
+      },
+      "expected_status": "error",
+      "expected_code": "PROFILE_BINDING_MISMATCH",
+      "must_reject": true,
+      "must_not_dispatch": true
+    },
+    {
+      "id": "NEG-TENANT-ID",
+      "field": "tenant_id",
+      "mutation": "delete required field",
+      "invalid_fixture": {
+        "operation": "delete",
+        "path": "identity_envelope.tenant_id"
+      },
+      "expected_status": "error",
+      "expected_code": "TENANT_MISMATCH",
+      "must_reject": true,
+      "must_not_dispatch": true
+    },
+    {
+      "id": "NEG-RUNTIME-GENERATION",
+      "field": "runtime_generation",
+      "mutation": "delete required field",
+      "invalid_fixture": {
+        "operation": "delete",
+        "path": "identity_envelope.runtime_generation"
+      },
+      "expected_status": "error",
+      "expected_code": "REVOKED_IDENTITY",
+      "must_reject": true,
+      "must_not_dispatch": true
+    },
+    {
+      "id": "NEG-TOOL-NAME",
+      "field": "tool_name",
+      "mutation": "delete required field",
+      "invalid_fixture": {
+        "operation": "delete",
+        "path": "identity_envelope.tool_name"
+      },
+      "expected_status": "error",
+      "expected_code": "REQUEST_BINDING_MISMATCH",
+      "must_reject": true,
+      "must_not_dispatch": true
+    },
+    {
+      "id": "NEG-PAYLOAD-SHA256",
+      "field": "payload_sha256",
+      "mutation": "delete required field",
+      "invalid_fixture": {
+        "operation": "delete",
+        "path": "identity_envelope.payload_sha256"
+      },
+      "expected_status": "error",
+      "expected_code": "REQUEST_BINDING_MISMATCH",
+      "must_reject": true,
+      "must_not_dispatch": true
+    },
+    {
+      "id": "NEG-NONCE",
+      "field": "nonce",
+      "mutation": "delete required field",
+      "invalid_fixture": {
+        "operation": "delete",
+        "path": "identity_envelope.nonce"
+      },
+      "expected_status": "error",
+      "expected_code": "REPLAY_DETECTED",
+      "must_reject": true,
+      "must_not_dispatch": true
+    },
+    {
+      "id": "NEG-ISSUED-AT",
+      "field": "issued_at",
+      "mutation": "delete required field",
+      "invalid_fixture": {
+        "operation": "delete",
+        "path": "identity_envelope.issued_at"
+      },
+      "expected_status": "error",
+      "expected_code": "AUTHENTICATION_REQUIRED",
+      "must_reject": true,
+      "must_not_dispatch": true
+    },
+    {
+      "id": "NEG-EXPIRES-AT",
+      "field": "expires_at",
+      "mutation": "delete required field",
+      "invalid_fixture": {
+        "operation": "delete",
+        "path": "identity_envelope.expires_at"
+      },
+      "expected_status": "error",
+      "expected_code": "AUTHENTICATION_REQUIRED",
+      "must_reject": true,
+      "must_not_dispatch": true
+    },
+    {
+      "id": "NEG-SIGNATURE",
+      "field": "signature",
+      "mutation": "delete required field",
+      "invalid_fixture": {
+        "operation": "delete",
+        "path": "identity_envelope.signature"
+      },
+      "expected_status": "error",
+      "expected_code": "AUTHENTICATION_REQUIRED",
+      "must_reject": true,
+      "must_not_dispatch": true
+    }
+  ]
+}

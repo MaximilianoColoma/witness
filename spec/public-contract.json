@@ -1,0 +1,431 @@
+{
+  "contract_version": "1.1.0-draft.3",
+  "product": "Witness",
+  "technical_identifier": "log-mcp",
+  "scope_status": "identity_upgrade_implemented_contract_alignment_active",
+  "purpose": "Evidence-oriented storage and retrieval of project decisions, insights, outcomes and records through MCP.",
+  "public_tools": [
+    "tool_register_project",
+    "tool_log_decision",
+    "tool_log_insight",
+    "tool_log_outcome",
+    "tool_log_record",
+    "tool_update_status",
+    "tool_get_entry",
+    "tool_get_context_for",
+    "tool_query_log",
+    "tool_query_log_fts5"
+  ],
+  "wire_contract": {
+    "path": "spec/wire-contract.json",
+    "version": "1.1.0-draft.3",
+    "authority": "Normative request/response fields, defaults, bounds and operation-specific errors."
+  },
+  "tool_semantics": {
+    "tool_register_project": "Create a project namespace, or atomically update only domains and description for the same immutable name. request_id controls idempotency; rename is not supported.",
+    "tool_log_decision": "Append a decision with rationale, project, domain and authenticated actor attribution.",
+    "tool_log_insight": "Append a project-scoped insight with confidence and authenticated actor attribution; project is required.",
+    "tool_log_outcome": "Append an outcome with result, evidence references and authenticated actor attribution.",
+    "tool_log_record": "Append a typed public record with redacted content, references and authenticated actor attribution. This is an additive draft tool; Legacy had no MCP wrapper for its internal record function.",
+    "tool_update_status": "Apply a validated lifecycle status transition to a public core entry.",
+    "tool_get_entry": "Read one visible core entry and its public references.",
+    "tool_get_context_for": "Read bounded project context across decisions, insights, outcomes and records.",
+    "tool_query_log": "Filter public core entries by declared fields and bounded pagination.",
+    "tool_query_log_fts5": "Perform local SQLite FTS5 text search without embeddings or external model calls."
+  },
+  "data_objects": [
+    "project",
+    "decision",
+    "insight",
+    "outcome",
+    "record"
+  ],
+  "schemas": {
+    "required": [
+      "project_registry",
+      "decisions",
+      "insights",
+      "outcomes",
+      "records",
+      "status_changes",
+      "links",
+      "operations_log",
+      "schema_version"
+    ],
+    "excluded": [
+      "embeddings",
+      "entity_graph",
+      "owner_inbox",
+      "owner_decision_queue",
+      "spindle_runs",
+      "batch_runs"
+    ]
+  },
+  "identity_authority": {
+    "authority_source": "authenticated_server_principal",
+    "trusted_boundary": "A configured CredentialProvider validates the raw transport credential and constructs the Principal before MCP dispatch. Forwarded headers, metadata and tool arguments are never trusted principal sources.",
+    "accepted_credential_types": [
+      "oauth_bearer",
+      "api_key_provider",
+      "synthetic_test_provider"
+    ],
+    "principal_fields": [
+      "subject_id",
+      "client_id",
+      "role",
+      "credential_type",
+      "credential_id",
+      "issuer",
+      "audience",
+      "issued_at",
+      "expires_at",
+      "revocation_status"
+    ],
+    "principal_validation": "All fields required, canonical UTF-8 identifiers 1..128 characters, role in declared set, issuer and audience exact configured match, issued_at not in future beyond 30 seconds, expires_at after issued_at/current time, revocation_status exactly active. Missing, malformed, conflicting or provider-indeterminate claims deny before dispatch.",
+    "caller_claim_policy": "assertion_only_mismatch_deny",
+    "canonical_comparison": "Unicode NFC then exact case-sensitive byte comparison; missing caller claim on tools that declare it returns IDENTITY_MISMATCH.",
+    "mismatch_order": "Compare authenticated subject and asserted caller before object lookup, query, audit of object identifiers or mutation. Mismatch may write only a redacted security event without object existence.",
+    "default": "deny",
+    "delegation_supported": false,
+    "rule": "A caller_instance_id or actor field is a compatibility assertion only. It must exactly equal authenticated subject_id and never grants authority. Delegation is not supported in v1.",
+    "anonymous_policy": "No listed MCP tool is anonymous; anonymous_allowlist is empty.",
+    "anonymous_allowlist": []
+  },
+  "credential_lifecycle": {
+    "provider_boundary": "Issuance, protected storage, rotation, revocation, replay detection and compromise response are CredentialProvider responsibilities; the public core stores no raw credential.",
+    "required_claims": [
+      "subject_id",
+      "client_id",
+      "role",
+      "credential_type",
+      "credential_id",
+      "issuer",
+      "audience",
+      "issued_at",
+      "expires_at",
+      "revocation_status"
+    ],
+    "expiry_policy": "Reject missing expiry, expired credentials and invalid/future issued_at before tool dispatch.",
+    "revocation_policy": "Reject revoked or indeterminate status; provider lookup/cache failure is deny. Revocation invalidates cache immediately or within a configured maximum 30-second TTL.",
+    "replay_policy": "CredentialProvider binds credential_id to audience and detects provider-defined replay; request_id independently deduplicates mutations.",
+    "retention": "Audit may retain credential_id hash only; never raw credential. Security-event retention is configuration with documented deletion.",
+    "failure_policy": "Return AUTHENTICATION_REQUIRED without credential material, claim echo or fallback identity."
+  },
+  "authorization_model": {
+    "mode": "single_tenant_v1",
+    "default": "deny",
+    "roles": {
+      "reader": [
+        "tool_get_entry",
+        "tool_get_context_for",
+        "tool_query_log",
+        "tool_query_log_fts5"
+      ],
+      "writer": [
+        "tool_get_entry",
+        "tool_get_context_for",
+        "tool_query_log",
+        "tool_query_log_fts5",
+        "tool_log_decision",
+        "tool_log_insight",
+        "tool_log_outcome",
+        "tool_log_record"
+      ],
+      "admin": [
+        "tool_get_entry",
+        "tool_get_context_for",
+        "tool_query_log",
+        "tool_query_log_fts5",
+        "tool_log_decision",
+        "tool_log_insight",
+        "tool_log_outcome",
+        "tool_log_record",
+        "tool_register_project",
+        "tool_update_status"
+      ]
+    },
+    "operations": {
+      "read": "authenticated reader/writer/admin",
+      "append": "writer/admin",
+      "register_project": "admin",
+      "status_transition": "admin"
+    },
+    "object_scope": "All public-core objects belong to one configured tenant. Multi-tenancy and per-project delegation are out of scope for v1; enabling either requires a new contract and isolation tests."
+  },
+  "privacy": {
+    "coverage_rule": "Every persisted or indexed string, string-list member and string-valued JSON leaf is potential_pii unless explicitly classified as a validated operational identifier or closed enum; recursively scan before DB, FTS, audit or log persistence.",
+    "field_classes": {
+      "project.description": "potential_pii",
+      "decision.title/decision/alternatives/rationale/tags": "potential_pii",
+      "insight.title/insight/actionable_in/tags": "potential_pii",
+      "outcome.task_summary/root_cause/prevented_by/tags": "potential_pii",
+      "record.title/content/tags": "potential_pii",
+      "search.query/snippet": "potential_pii",
+      "actor_and_ids": "operational_metadata",
+      "credential_claims": "security_sensitive_not_persisted_as_content"
+    },
+    "write_policy": "Scan every listed free-text field before persistence; replace email with [REDACTED:EMAIL] and other supported classes with stable [REDACTED:<CLASS>] markers. Reject malformed Unicode, unscannable input or policy violation.",
+    "read_policy": "Return only persisted redacted content. No public tool can reveal pre-redaction values.",
+    "raw_pii_storage": false,
+    "logging_policy": "Do not log request bodies, raw free text, credentials or rejected values; audit stores field names and result codes only."
+  },
+  "audit": {
+    "append_only": true,
+    "required_table": "operations_log",
+    "required_events": [
+      "authentication_failure",
+      "identity_mismatch",
+      "authorization_denial",
+      "create",
+      "read",
+      "search",
+      "status_transition",
+      "administrative_change"
+    ],
+    "required_fields": [
+      "event_id",
+      "occurred_at",
+      "principal_subject_id",
+      "asserted_subject_id",
+      "client_id",
+      "role",
+      "tool_name",
+      "object_type",
+      "object_id_or_redacted",
+      "result_code",
+      "correlation_id",
+      "request_id",
+      "event_type",
+      "principal_pubkey",
+      "owner_pubkey",
+      "profile_id",
+      "profile_version_sha256",
+      "tenant_id",
+      "runtime_generation",
+      "envelope_nonce",
+      "payload_sha256"
+    ],
+    "forbidden_fields": [
+      "credential",
+      "token",
+      "raw_request_body",
+      "pre_redaction_value",
+      "rejected_raw_value"
+    ],
+    "failure_policy": "A state-changing operation and its audit event commit in one SQLite transaction or neither commits. Audit insertion failure rolls back object mutation.",
+    "append_protection": "Canonical triggers operations_log_no_update and operations_log_no_delete abort mutations. Startup verifies table/columns and both trigger SQL digests; mismatch or absence sets read-only tamper mode and all writes return INTERNAL_ERROR."
+  },
+  "lifecycle": {
+    "states": {
+      "decision": [
+        "proposed",
+        "locked",
+        "superseded",
+        "archived"
+      ],
+      "insight": [
+        "hypothesis",
+        "validated",
+        "invalidated",
+        "archived"
+      ],
+      "outcome": [
+        "recorded",
+        "verified",
+        "disputed",
+        "archived"
+      ],
+      "record": [
+        "active",
+        "archived"
+      ]
+    },
+    "transitions": {
+      "decision": [
+        "proposed->locked",
+        "proposed->archived",
+        "locked->superseded",
+        "locked->archived"
+      ],
+      "insight": [
+        "hypothesis->validated",
+        "hypothesis->invalidated",
+        "validated->archived",
+        "invalidated->archived"
+      ],
+      "outcome": [
+        "recorded->verified",
+        "recorded->disputed",
+        "verified->archived",
+        "disputed->archived"
+      ],
+      "record": [
+        "active->archived"
+      ]
+    },
+    "terminal_or_non_reopenable": [
+      "archived",
+      "superseded"
+    ],
+    "invalid_transition": "Return CONFLICT without mutation."
+  },
+  "errors": {
+    "classes": [
+      "AUTHENTICATION_REQUIRED",
+      "IDENTITY_MISMATCH",
+      "PERMISSION_DENIED",
+      "INVALID_INPUT",
+      "NOT_FOUND",
+      "CONFLICT",
+      "RATE_LIMITED",
+      "INTERNAL_ERROR"
+    ],
+    "transport": "stable machine-readable code, correlation_id and non-sensitive message",
+    "existence_oracle_policy": "v1 has no per-object read relation: allowed reader/writer/admin reads of absent IDs return NOT_FOUND; tool-level role denial occurs before object lookup and returns PERMISSION_DENIED without identifier/state detail.",
+    "invalid_input_policy": "Return field name and validation code only; never echo rejected value, query text or raw body.",
+    "secret_policy": "Never return credential, token hash, private path, SQL/schema/stack detail or pre-redaction value in any error."
+  },
+  "idempotency_concurrency": {
+    "mutation_key": "request_id is required non-empty ASCII [A-Za-z0-9._:-], length 1..128; no Unicode or whitespace normalization; exact bytes plus subject and tool form identity",
+    "duplicate_same_payload": "same canonical RFC8785-style JSON payload returns original result without second mutation/audit business event",
+    "duplicate_different_payload": "CONFLICT",
+    "write_control": "SQLite BEGIN IMMEDIATE plus state/version precondition inside transaction",
+    "retry": "caller may retry only documented transient INTERNAL_ERROR/RATE_LIMITED with same request_id"
+  },
+  "compatibility": {
+    "silent_rename_allowed": false,
+    "stable": [
+      "technical identifier log-mcp",
+      "listed MCP tool names",
+      "public data object meanings"
+    ],
+    "claimed_actor_migration": "Existing caller_instance_id parameters may remain during one deprecation window but are assertion-only and mismatch-deny.",
+    "breaking_change": "Requires versioned contract, migration notes, compatibility tests and explicit owner decision.",
+    "private_not_guaranteed": [
+      "deployment service names",
+      "internal agent identities",
+      "private project/reference IDs",
+      "legacy backup paths",
+      "private OAuth client registrations"
+    ],
+    "draft_2_change": "Add tool_update_status.new_status to success response; required by frozen acceptance and lifecycle semantics; discovered by independent implementation review.",
+    "identity_upgrade": "Breaking pre-1.0 draft change: every public tool requires signed shared Identity Envelope; legacy caller claims remain non-authoritative assertions only."
+  },
+  "excluded": [
+    "semantic_search",
+    "hybrid_search",
+    "graph_search",
+    "embeddings",
+    "owner_inbox",
+    "owner_decision_queue",
+    "pii_reveal",
+    "spindle",
+    "batch_automation",
+    "production_backup",
+    "production_import_export",
+    "internal_risk_profiles",
+    "cross_resonance"
+  ],
+  "stability": {
+    "level": "draft",
+    "versioning": "SemVer begins only after first accepted public contract",
+    "deprecation": "minimum one documented release or explicit pre-1.0 break decision",
+    "immutability": "released versions and artifacts are never silently replaced"
+  },
+  "authority": {
+    "public_visibility_authorized": false,
+    "github_mutation_authorized": false,
+    "deployment_authorized": false,
+    "license": "OPEN_OWNER_GATE",
+    "technical_scope_owner": "Vision Principal Office",
+    "final_release_owner": "Max"
+  },
+  "acceptance_refs": [
+    "WIT-RUNTIME-001",
+    "WIT-AUTH-001",
+    "WIT-EVIDENCE-001",
+    "SUPPLY-001",
+    "SANITIZE-001",
+    "RIGHTS-001",
+    "VALIDATION-001"
+  ],
+  "statement_limits": [
+    "This contract is not implementation evidence.",
+    "FTS5 support does not imply semantic/vector search.",
+    "Local synthetic tests do not prove production privacy, scale or outcome."
+  ],
+  "identity_envelope_contract": {
+    "version": "1.0",
+    "authority_source": "signed_identity_envelope",
+    "principal": "principal_pubkey is sole request author and must equal verified request signer",
+    "owner_attestation": {
+      "domain_separator": "witness-mission:agent-auth:v1:",
+      "binds": [
+        "principal_pubkey",
+        "tenant_id",
+        "profile_id",
+        "profile_version_sha256",
+        "not_before",
+        "expires_at",
+        "capabilities",
+        "runtime_generation"
+      ],
+      "semantics": "authorization evidence only; never rewrites author",
+      "revocation": "checked for every security-sensitive operation"
+    },
+    "profile_binding": {
+      "fields": [
+        "profile_id",
+        "profile_version_sha256"
+      ],
+      "semantics": "configuration not authority",
+      "spawn_rule": "single fail-closed chokepoint; key+attestation+tenant+profile hash+runtime generation must resolve together"
+    },
+    "request_binding": {
+      "fields": [
+        "version",
+        "principal_pubkey",
+        "owner_pubkey",
+        "owner_attestation",
+        "profile_id",
+        "profile_version_sha256",
+        "tenant_id",
+        "runtime_generation",
+        "tool_name",
+        "payload_sha256",
+        "nonce",
+        "issued_at",
+        "expires_at",
+        "signature"
+      ],
+      "tenant_rule": "tenant_id must equal server-resolved tenant; never selects tenant",
+      "signature_rule": "Ed25519 over the domain-separated RFC8785 canonical envelope without signature; payload_sha256 binds the exact finite-JSON raw request after removing identity_envelope",
+      "freshness": "issued_at/expires_at required; bounded server clock skew"
+    },
+    "replay": {
+      "claim_key": [
+        "tenant_id",
+        "principal_pubkey",
+        "nonce"
+      ],
+      "order": "verify signatures and bindings before atomic shared set-if-absent",
+      "failure": "duplicate or unavailable/indeterminate store denies"
+    },
+    "revocation": {
+      "subjects": [
+        "owner_pubkey",
+        "principal_pubkey",
+        "owner_attestation",
+        "profile_version_sha256",
+        "runtime_generation"
+      ],
+      "effect": "deny new request immediately; terminate or revalidate active session; invalidate caches; audit safely"
+    },
+    "compatibility_claims": [
+      "caller_instance_id is assertion-only and cannot authorize",
+      "legacy bearer/provider credentials cannot bypass signed envelope",
+      "no registry fallback may authorize production OAuth/API-key credentials; the synthetic in-memory test adapter fails closed on ambiguous bindings and clears registry state after fork",
+      "no privilege union across principals"
+    ]
+  }
+}
