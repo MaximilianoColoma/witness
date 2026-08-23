@@ -23,7 +23,7 @@ def test_readme_leads_with_problem_flow_and_honest_vision():
 def test_product_plan_and_proof_brief_exist():
     roadmap = (ROOT / "ROADMAP.md").read_text()
     proof = (ROOT / "docs" / "proof-brief.md").read_text()
-    assert "v0.1.0 — shipped" in roadmap
+    assert "## Runs today — v0.1.0 shipped" in roadmap
     assert "Next proof" in roadmap
     assert "Not promised" in roadmap
     assert "Evidence class: real" in proof
@@ -33,4 +33,5 @@ def test_real_demo_executes_witness_roundtrip():
     demo = ROOT / "examples" / "coordinated_autonomy_demo.py"
     result = subprocess.run([sys.executable, str(demo)], cwd=ROOT, text=True, capture_output=True, timeout=60)
     assert result.returncode == 0, result.stdout + result.stderr
+    assert "[1/3] Decision recorded: require independent validation" in result.stdout
     assert "WITNESS_DEMO_PASS decisions=1 outcomes=1 outcome_status=verified distinct_validator=true context_restored=true" in result.stdout
