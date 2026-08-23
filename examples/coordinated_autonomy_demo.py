@@ -75,7 +75,7 @@ async def main() -> None:
             ).fetchone()
         assert audit and audit[0] == validator_subject
         assert provider.principal_pubkey(builder) != validator_subject
-        print("[1/3] Decision witnessed: builder cannot validate its own release")
+        print("[1/3] Decision recorded: require independent validation")
         print("[2/3] Outcome verified by a distinct validator identity")
         print("[3/3] Project context restored from the database")
         print("WITNESS_DEMO_PASS decisions=1 outcomes=1 outcome_status=verified distinct_validator=true context_restored=true")
