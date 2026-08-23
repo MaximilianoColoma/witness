@@ -4,7 +4,7 @@
 
 The project uses **Witness Evidence** as its public-facing qualifier and the category **Open Evidence Layer for Agentic Systems**.
 
-“Evidence & Learning Infrastructure for Multi-Agent Systems” is north-star language only; it does not describe shipped learning behavior in `v0.1.0`.
+“Evidence & Learning Infrastructure for Multi-Agent Systems” is north-star language only. Spindle is the planned learning function inside Witness; it does not describe shipped learning behavior in `v0.1.0` or a third product identity.
 
 This is a documentation and anti-confusion measure, not a technical rename. The following identifiers remain unchanged:
 

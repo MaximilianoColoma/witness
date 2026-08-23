@@ -77,11 +77,13 @@ Only after the local and cross-model contracts are stable:
 
 A GitHub release is not a deployment or runtime proof.
 
-## North star — verified learning return
+## North star — Spindle inside Witness
 
 Verified outcomes should improve later decisions without allowing unverified text to silently become policy.
 
-This requires a separately governed learning layer with:
+Spindle is the planned learning function inside Witness. It starts from outcomes in Witness's `verified` lifecycle status and applies additional eligibility and review gates before producing governed learning candidates, reusable patterns, rules, and guards for explicit reuse by later Mission runs. The lifecycle status records an acceptance transition; it does not by itself prove that Witness fetched or independently validated the underlying evidence.
+
+This internal Witness capability requires:
 
 - eligibility rules for what may become a learning candidate;
 - provenance back to decisions, evidence, outcomes, and validators;
@@ -89,7 +91,7 @@ This requires a separately governed learning layer with:
 - measured improvement on a later bounded task;
 - guardrails against self-confirming or poisoned feedback loops.
 
-Spindle-style learning remains separate from Witness. Witness supplies evidence-bearing project state; it does not automatically train models, rewrite policy, or operate an autonomous learning loop in `v0.1.0`.
+Mission remains the separate coordination product. Spindle remains inside Witness. Witness `v0.1.0` supplies the working Evidence Core; it does not automatically train models, generate rules, rewrite policy, feed learning back to Mission, or operate the full Spindle loop.
 
 ## Community and adoption
 
@@ -106,7 +108,7 @@ After one successful external continuity proof:
 - no semantic/vector search in the current core;
 - no bundled scheduler or agent-spawning runtime;
 - no first-party model/runtime adapters in `v0.1.0`;
-- no automatic Mission bridge or Spindle learning loop;
+- no automatic Mission return path or full Spindle learning loop in `v0.1.0`;
 - no hosted service, scale, savings, or customer-outcome claim without external evidence.
 
 Every capability gate requires prewritten acceptance, a distinct validator, and readback from the actual target environment. Detailed status and results belong in [`EVIDENCE.md`](EVIDENCE.md), not in the roadmap narrative.

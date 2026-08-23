@@ -25,7 +25,12 @@ def test_readme_separates_truth_horizons_and_suite_boundaries():
         assert heading in readme
     assert "not automatic evidence verification" in readme
     assert "not automatic cross-model learning" in readme
-    assert "Mission and Spindle are separate systems" in readme
+    assert "Mission is a separate product. Spindle is the planned learning function inside Witness." in readme
+    assert "Mission coordinates agent work. Witness preserves evidence and is designed to compound verified learning." in readme
+    assert 'subgraph W["Witness"]' in readme
+    assert 'S["Spindle<br/>planned learning function"]' in readme
+    assert "Evidence Core runs today. The full Spindle learning loop is planned." in readme
+    assert "Mission and Spindle are separate systems" not in readme
     assert "technical identifiers remain unchanged" in readme
     assert "Witness Evidence is the public-facing qualifier" in readme
 
@@ -59,7 +64,8 @@ def test_roadmap_is_capability_led_and_links_to_evidence():
     assert "## Runs today — v0.1.0 shipped" in roadmap
     assert "## Building next — cross-model project continuity" in roadmap
     assert "## After that — portable verification and integration recipes" in roadmap
-    assert "## North star — verified learning return" in roadmap
+    assert "## North star — Spindle inside Witness" in roadmap
+    assert "Spindle is the planned learning function inside Witness" in roadmap
     assert "[Evidence and proof status](EVIDENCE.md)" in roadmap
     assert "one external agent team restores and verifies context" not in roadmap.lower()
 
@@ -81,6 +87,34 @@ def test_evidence_owns_proof_status_acceptance_and_results():
     assert "The demo was added after the `v0.1.0` tag." in evidence
     assert "not present in the immutable `v0.1.0` release assets" in evidence
     assert "builder/validator separation is enforced by the product rather than chosen by this demo" in evidence
+    assert "## Spindle learning function — planned proof" in evidence
+    assert "Spindle is an internal Witness capability" in evidence
+
+
+def test_spindle_architecture_is_consistent_across_public_documents():
+    readme = text("README.md")
+    roadmap = text("ROADMAP.md")
+    evidence = text("EVIDENCE.md")
+    proof = text("docs/proof-brief.md")
+    trademarks = text("TRADEMARKS.md")
+    for document in (readme, roadmap, evidence, proof, trademarks):
+        assert "Spindle" in document
+        assert "inside Witness" in document or "internal Witness" in document
+    assert "Mission and Witness are the two main products" in readme
+    assert "not a third product" in evidence
+    assert "third product identity" in trademarks
+    assert "full Spindle learning loop is planned" in readme
+    assert "does not generate those artifacts or feed them back automatically" in readme
+    assert "does not automatically train models, generate rules" in roadmap
+    assert "feed learning back to Mission" in roadmap
+    assert "Witness-to-Mission learning return" in readme
+    spindle = evidence[evidence.index("## Spindle learning function — planned proof"):]
+    assert "**Status: `planned — not yet run`**" in spindle
+    assert "does not implement this Spindle learning loop or its return path to Mission" in spindle
+    for document in (readme, roadmap, evidence, proof):
+        assert "outcomes in Witness's `verified` lifecycle status" in document
+        assert "eligibility" in document
+    assert "No current Spindle learning behavior is claimed" in proof
 
 
 def test_brand_qualification_discloses_unrelated_project_without_rename():
