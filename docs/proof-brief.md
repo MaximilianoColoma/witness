@@ -20,6 +20,8 @@
 - `Building next`: cross-model project continuity with a prewritten external proof.
 - `North star`: portable verification and verified learning return, explicitly not current functionality.
 
+**System architecture:** Mission and Witness are the two main products. Mission coordinates work. Spindle is the planned learning function inside Witness. It begins with outcomes in Witness's `verified` lifecycle status but requires additional eligibility and review gates before creating learning candidates, patterns, rules, or guards for explicit later reuse by Mission. The lifecycle status alone is not proof of independently validated evidence. No current Spindle learning behavior is claimed.
+
 **Desired action:** an experienced agent-platform engineer understands the category in one screen, runs the real demo, inspects the evidence limits, and can see the next integration capability without mistaking it for shipped functionality.
 
 **Naming boundary:** “Witness Evidence” qualifies public prose. Repository, package, module, MCP tools, contracts, and v0.1.0 artifacts keep their technical identifiers. The unrelated in-toto/witness project is disclosed without implying affiliation or making a legal conclusion.

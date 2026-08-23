@@ -137,13 +137,22 @@ A failure may improve the product contract; it cannot be edited out of the proof
 
 Acceptance requires a released evidence bundle, a public verifier, a deliberate record modification, and an external party detecting the mismatch without trusting the live Witness server.
 
-## Verified learning return — north-star proof
+## Spindle learning function — planned proof
 
 **Status: `planned — not yet run`**
 
-Acceptance requires a later bounded task to improve because of a provenance-bound, separately accepted earlier outcome. The proof must also show that unverified text, revoked evidence, and superseded decisions do not silently become policy.
+Spindle is an internal Witness capability, not a third product. Its planned role begins with outcomes in Witness's `verified` lifecycle status and applies additional eligibility and review gates before creating governed learning candidates, patterns, rules, and guards for an explicit return path to later Mission runs. The lifecycle status records an acceptance transition; it does not by itself prove that Witness fetched or independently validated the underlying evidence.
 
-Witness `v0.1.0` does not implement this learning loop.
+Acceptance requires:
+
+1. an outcome in Witness's `verified` lifecycle status passes explicit Spindle eligibility and produces a provenance-bound learning candidate;
+2. an independent review accepts, rejects, or supersedes that candidate;
+3. only accepted learning becomes an eligible pattern, rule, or guard;
+4. a later bounded Mission uses the approved learning through an explicit interface;
+5. the later task measurably improves without silently importing unverified, revoked, or superseded material;
+6. rollback removes the learning from future use without rewriting historical evidence.
+
+Witness `v0.1.0` does not implement this Spindle learning loop or its return path to Mission.
 
 ## Adding evidence
 

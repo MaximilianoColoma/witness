@@ -139,19 +139,41 @@ Witness aims to become the open evidence and learning infrastructure through whi
 
 That north star includes portable verification and **verified learning return**: accepted outcomes may inform later work without allowing unverified text to silently become policy. It is **not automatic cross-model learning** in v0.1.0.
 
+### Two-product architecture
+
+Mission is a separate product. Spindle is the planned learning function inside Witness.
+
+**Mission coordinates agent work. Witness preserves evidence and is designed to compound verified learning.**
+
+```mermaid
+flowchart LR
+    H["Human<br/>goal and direction"] --> M["Mission<br/>coordinates"]
+    M --> G["Specialist agents<br/>work"]
+    G --> E
+
+    subgraph W["Witness"]
+        E["Decision · Outcome · Evidence"] --> S["Spindle<br/>planned learning function"]
+        S --> L["Patterns · Rules · Guards"]
+    end
+
+    L -. "future governed return" .-> M
+```
+
+The **Evidence Core runs today. The full Spindle learning loop is planned.** Its future job inside Witness is to take outcomes in Witness's `verified` lifecycle status and, after additional eligibility and review gates, turn them into governed learning candidates, reusable patterns, rules, and guards for later Mission runs. The status records an acceptance transition; it does not by itself prove that Witness fetched or independently validated the underlying evidence. Version `0.1.0` does not generate those artifacts or feed them back automatically.
+
 ### Dream functions
 
 These are **enabled patterns, not bundled orchestration** today:
 
 - cross-model continuity without transcript access;
 - portable proof that an external validator can inspect without trusting the builder’s narration;
-- verified learning return through a separately governed learning layer;
+- verified learning return through Spindle, the planned internal Witness learning function;
 - owner-readable autonomy with a durable decision chain;
 - incident memory that carries accepted root cause and prevention into later missions.
 
 **Every token should leave the system more valuable than before.** That is the product direction, not a current efficiency or economic claim.
 
-Mission and Spindle are separate systems: Mission coordinates work; a future Spindle-style layer may govern learning return; Witness preserves the evidence boundary they can reference. Neither system is bundled into Witness v0.1.0, and no automatic bridge ships today.
+Mission and Witness are the two main products. Mission coordinates work; Witness owns the evidence boundary and the planned Spindle learning function. No automatic Witness-to-Mission learning return ships in `v0.1.0`.
 
 ## Built now — and not yet
 
@@ -161,7 +183,7 @@ Mission and Spindle are separate systems: Mission coordinates work; a future Spi
 | Signed identity envelopes and request binding | Externally proven cross-model continuity |
 | Role-based default-deny access | Portable external artifact verification |
 | PII redaction and bounded reads | Multi-tenant hosted service |
-| Transactional append-only operations audit | Spindle-style verified learning return |
+| Transactional append-only operations audit | Full Spindle learning loop inside Witness |
 | Real local demo of the release-core source; reproducible v0.1.0 assets | Automatic Mission bridge, SaaS, billing, or customer outcomes |
 
 The service is **not deployed** by this repository. Publication and green CI do not prove production operation, scale, savings, or user impact.
